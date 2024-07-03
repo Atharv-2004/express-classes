@@ -1,8 +1,11 @@
 const express = require('express');
-const app = express();
+const fs = require('fs');
 const os = require('os');
+const app = express();
 
-// Custom logger middleware
+app.use(express.json());
+
+
 app.use((req, res, next) => {
     const method = req.method;
     const ip = req.ip;
@@ -12,30 +15,37 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.json());
 
-let courses = [
-    { id: 1, name: 'java' },
-    { id: 2, name: 'javascript' },
-    { id: 3, name: 'python' }
-];
+const coursesFilePath = './courses.json';
 
-// GET endpoint to retrieve all courses
+const readCoursesFromFile = () => {
+    const data = fs.readFileSync(coursesFilePath);
+    return JSON.parse(data);
+};
+
+const writeCoursesToFile = (courses) => {
+    fs.writeFileSync(coursesFilePath, JSON.stringify(courses, null, 2));
+};
+
+let courses = readCoursesFromFile();
+
+
 app.get('/courses', (req, res) => {
     res.json(courses);
 });
 
-// POST endpoint to add a new course
+
 app.post('/courses', (req, res) => {
     const course = {
         id: courses.length + 1,
         name: req.body.name
     };
     courses.push(course);
+    writeCoursesToFile(courses);
     res.json(course);
 });
 
-// PUT endpoint to update a course by ID
+
 app.put('/courses/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const course = courses.find(c => c.id === id);
@@ -45,10 +55,11 @@ app.put('/courses/:id', (req, res) => {
     }
 
     course.name = req.body.name;
+    writeCoursesToFile(courses);
     res.json(course);
 });
 
-// DELETE endpoint to delete a course by ID
+
 app.delete('/courses/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const courseIndex = courses.findIndex(c => c.id === id);
@@ -58,6 +69,7 @@ app.delete('/courses/:id', (req, res) => {
     }
 
     const deletedCourse = courses.splice(courseIndex, 1);
+    writeCoursesToFile(courses);
     res.json(deletedCourse);
 });
 

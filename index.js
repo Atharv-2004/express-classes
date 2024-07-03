@@ -1,5 +1,16 @@
 const express = require('express');
 const app = express();
+const os = require('os');
+
+// Custom logger middleware
+app.use((req, res, next) => {
+    const method = req.method;
+    const ip = req.ip;
+    const hostname = os.hostname();
+    const date = new Date().toISOString();
+    console.log(`[${date}] ${method} request from ${ip} on ${hostname}`);
+    next();
+});
 
 app.use(express.json());
 
